@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: 8080
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/verdex_db
-    username: postgres
-    password: root
+    url: jdbc:postgresql://ep-damp-wildflower-a1p5bcsx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+    username: neondb_owner
+    password: npg_sby5oYMcw3OV
     driver-class-name: org.postgresql.Driver
 
   security:
@@ -32,7 +32,7 @@ groq:
 
 verdex:
   cors:
-    allowed-origins: http://localhost:3000
+    allowed-origins: https://verdexai.pages.dev
 
 encryption:
   key: VerdexSecretKey2024ChangeThisNow!
@@ -41,4 +41,5 @@ file:
   upload-dir: uploads
 
 application:
-  base-url: http://localhost:8081
+  base-url: https://verdexai.onrender.com
+
