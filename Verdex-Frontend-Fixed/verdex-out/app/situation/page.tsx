@@ -51,7 +51,7 @@ export default function SituationPage() {
         setResult(null);
         setError("");
         try {
-            const res = await fetch("http://localhost:8081/api/v1/analyse", {
+            const res = await fetch("https://verdexai.onrender.com/api/v1/analyse", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -118,11 +118,10 @@ export default function SituationPage() {
                             <motion.div
                                 key={idx}
                                 onClick={() => handleHistoryCard(idx)}
-                                className={`p-6 rounded-[20px] border cursor-pointer transition-all duration-300 relative overflow-hidden group ${
-                                    activeCard === idx
+                                className={`p-6 rounded-[20px] border cursor-pointer transition-all duration-300 relative overflow-hidden group ${activeCard === idx
                                         ? "border-[#C9A45C] bg-gradient-to-r from-[#3B2B28]/60 to-[#161314]"
                                         : "border-[#C9A45C]/20 bg-[#161314]/80 hover:bg-[#3B2B28]/40 hover:border-[#C9A45C]/40"
-                                }`}
+                                    }`}
                             >
                                 {activeCard === idx && (
                                     <motion.div layoutId="leftActiveBorder" className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#C9A45C]" />
