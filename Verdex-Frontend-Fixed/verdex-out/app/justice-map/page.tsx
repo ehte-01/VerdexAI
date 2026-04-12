@@ -44,7 +44,7 @@ export default function JusticeMapPage() {
             setLoading(true);
             setError("");
             
-            let url = "http://localhost:8081/api/justice-map";
+            let url = "http://verdexai.onrender.com/api/justice-map";
             
             if (city || type) {
                 const params = new URLSearchParams();

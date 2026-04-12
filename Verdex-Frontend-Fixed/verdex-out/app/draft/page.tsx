@@ -80,7 +80,7 @@ export default function DraftPage() {
         setDraft(null);
         setIsEditing(false);
         try {
-            const res = await fetch("http://localhost:8081/api/v1/draft", {
+            const res = await fetch("http://verdexai.onrender.com/api/v1/draft", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

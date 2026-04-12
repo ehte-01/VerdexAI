@@ -34,7 +34,7 @@ const CHIPS_HI = ["वेतन नहीं मिला", "किराया 
 
 // ── COMPONENT ─────────────────────────────────────────────────────────────────
 export default function SituationPage() {
-    const { lang } = useLanguage();
+    const { lang, t } = useLanguage();
     const [activeCard, setActiveCard] = useState(0);
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(false);
@@ -51,7 +51,7 @@ export default function SituationPage() {
         setResult(null);
         setError("");
         try {
-            const res = await fetch("http://localhost:8081/api/v1/analyse", {
+            const res = await fetch("http://verdexai.onrender.com/api/v1/analyse", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

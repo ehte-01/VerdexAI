@@ -64,7 +64,7 @@ export default function ShieldPage() {
             formData.append("file", file);
             formData.append("language", lang === "HI" ? "HI" : "EN");
 
-            const res = await fetch("http://localhost:8081/api/v1/analyse-document", {
+            const res = await fetch("http://verdexai.onrender.com/api/v1/analyse-document", {
                 method: "POST",
                 body: formData,
             });
