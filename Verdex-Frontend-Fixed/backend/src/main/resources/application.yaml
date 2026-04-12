@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
@@ -32,7 +32,7 @@ groq:
 
 verdex:
   cors:
-    allowed-origins: https://verdexai.pages.dev
+    allowed-origins: "https://verdexai.pages.dev,http://localhost:3000"
 
 encryption:
   key: VerdexSecretKey2024ChangeThisNow!

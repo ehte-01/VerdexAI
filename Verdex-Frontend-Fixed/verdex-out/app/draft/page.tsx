@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Download, Copy, Edit3, Share2, TrendingUp, CheckCircle, Scale, Lock, AlertCircle } from "lucide-react";
+import { Download, Copy, Edit3, Share2, TrendingUp, CheckCircle, Scale, Lock, AlertCircle, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -25,6 +25,53 @@ interface DraftResponse {
     recipientBlock: string;
 }
 
+type FieldConfig = {
+    label: string;
+    placeholder: string;
+    type: "text" | "textarea";
+    span: 1 | 2;
+};
+
+const SCHEMAS: Record<string, FieldConfig[]> = {
+    "Salary Notice": [
+        { label: "Full Name", placeholder: "Applicant Name", type: "text", span: 1 },
+        { label: "Employer Name", placeholder: "Company Name", type: "text", span: 1 },
+        { label: "Job Role", placeholder: "Designation", type: "text", span: 1 },
+        { label: "Joining Date", placeholder: "Date of joining", type: "text", span: 1 },
+        { label: "Unpaid Months", placeholder: "e.g. Jan & Feb 2024", type: "text", span: 1 },
+        { label: "Amount", placeholder: "Total unpaid amount", type: "text", span: 1 },
+        { label: "Issue Description", placeholder: "Describe the issue...", type: "textarea", span: 2 },
+    ],
+    "Tenant Notice": [
+        { label: "Tenant Name", placeholder: "Tenant Name", type: "text", span: 1 },
+        { label: "Landlord Name", placeholder: "Landlord Name", type: "text", span: 1 },
+        { label: "Property Address", placeholder: "Full property address", type: "text", span: 2 },
+        { label: "Agreement Date", placeholder: "Date of agreement", type: "text", span: 2 },
+        { label: "Issue", placeholder: "E.g., Unpaid rent... ", type: "textarea", span: 2 },
+    ],
+    "Consumer Complaint": [
+        { label: "Customer Name", placeholder: "Customer Name", type: "text", span: 1 },
+        { label: "Company Name", placeholder: "Company Name", type: "text", span: 1 },
+        { label: "Product/Service", placeholder: "Product/Service", type: "text", span: 1 },
+        { label: "Purchase Date", placeholder: "Purchase Date", type: "text", span: 1 },
+        { label: "Amount", placeholder: "Amount", type: "text", span: 2 },
+        { label: "Issue Description", placeholder: "Describe the product defect or service issue...", type: "textarea", span: 2 },
+    ],
+    "FIR Draft": [
+        { label: "Complainant Name", placeholder: "Complainant Name", type: "text", span: 1 },
+        { label: "Incident Date", placeholder: "Incident Date", type: "text", span: 1 },
+        { label: "Location", placeholder: "Location of Incident", type: "text", span: 2 },
+        { label: "Accused", placeholder: "Leave blank if unknown", type: "text", span: 2 },
+        { label: "Full Incident Description", placeholder: "Factual narrative...", type: "textarea", span: 2 },
+    ],
+    "RTI Application": [
+        { label: "Applicant Name", placeholder: "Applicant Name", type: "text", span: 1 },
+        { label: "Department", placeholder: "Public Authority", type: "text", span: 1 },
+        { label: "Information Required", placeholder: "Specific files, notes, details...", type: "textarea", span: 2 },
+        { label: "Address", placeholder: "Applicant Address", type: "textarea", span: 2 },
+    ]
+};
+
 export default function DraftPage() {
     const { lang, t } = useLanguage();
     const [activeTab, setActiveTab]       = useState("Salary Notice");
@@ -35,16 +82,8 @@ export default function DraftPage() {
     const [isEditing, setIsEditing]       = useState(false);
     const [editedText, setEditedText]     = useState("");
     const [isMounted, setIsMounted]       = useState(false);
+    const [dynamicForm, setDynamicForm]   = useState<Record<string, string>>({});
     const textareaRef                     = useRef<HTMLTextAreaElement>(null);
-
-    const [form, setForm] = useState({
-        yourName:        "Rahul Sharma",
-        oppositeParty:   "ABC Pvt. Ltd.",
-        issueSummary:    "My employer has not paid my salary for the last 2 months.",
-        sinceWhen:       "January 2024",
-        amountInvolved:  "₹40,000",
-        additionalNotes: "",
-    });
 
     useEffect(() => {
         const d    = new Date();
@@ -64,8 +103,6 @@ export default function DraftPage() {
         { en: "RTI Application",     hi: "आरटीआई आवेदन"       },
     ];
 
-    const tabs = tabKeys.map(tab => tab.en); // backend always gets EN value
-
     const actionButtons = [
         { icon: Download, label: t("draft.btn.download"), action: handleDownload },
         { icon: Copy,     label: t("draft.btn.copy"),     action: handleCopy    },
@@ -73,22 +110,74 @@ export default function DraftPage() {
         { icon: Share2,   label: lang === "HI" ? "शेयर करें" : "Share", action: handleShare },
     ];
 
+    const handleTabSwitch = (enTab: string) => {
+        setActiveTab(enTab);
+        setDraft(null);
+        setError(null);
+        setIsEditing(false);
+        setDynamicForm({}); // Reset form for new tab
+    }
+
     async function generateNotice(e: React.FormEvent) {
         e.preventDefault();
         setIsGenerating(true);
         setError(null);
         setDraft(null);
         setIsEditing(false);
+
+        let mappedPayload = {
+            noticeType: activeTab,
+            yourName: "",
+            oppositeParty: "",
+            issueSummary: "",
+            sinceWhen: "",
+            amountInvolved: "",
+            additionalNotes: "",
+            language: lang === "HI" ? "HI" : "EN"
+        };
+
+        if (activeTab === "Salary Notice") {
+            mappedPayload.yourName = dynamicForm["Full Name"] || "";
+            mappedPayload.oppositeParty = dynamicForm["Employer Name"] || "";
+            mappedPayload.sinceWhen = dynamicForm["Unpaid Months"] || "";
+            mappedPayload.amountInvolved = dynamicForm["Amount"] || "";
+            mappedPayload.additionalNotes = `Job Role: ${dynamicForm["Job Role"] || "N/A"}, Joining Date: ${dynamicForm["Joining Date"] || "N/A"}`;
+            mappedPayload.issueSummary = dynamicForm["Issue Description"] || "";
+        } else if (activeTab === "Tenant Notice") {
+            mappedPayload.yourName = dynamicForm["Tenant Name"] || "";
+            mappedPayload.oppositeParty = dynamicForm["Landlord Name"] || "";
+            mappedPayload.sinceWhen = dynamicForm["Agreement Date"] || "";
+            mappedPayload.amountInvolved = "";
+            mappedPayload.additionalNotes = `Property Address: ${dynamicForm["Property Address"] || ""}`;
+            mappedPayload.issueSummary = dynamicForm["Issue"] || "";
+        } else if (activeTab === "Consumer Complaint") {
+            mappedPayload.yourName = dynamicForm["Customer Name"] || "";
+            mappedPayload.oppositeParty = dynamicForm["Company Name"] || "";
+            mappedPayload.sinceWhen = dynamicForm["Purchase Date"] || "";
+            mappedPayload.amountInvolved = dynamicForm["Amount"] || "";
+            mappedPayload.additionalNotes = `Product/Service: ${dynamicForm["Product/Service"] || ""}`;
+            mappedPayload.issueSummary = dynamicForm["Issue Description"] || "";
+        } else if (activeTab === "FIR Draft") {
+            mappedPayload.yourName = dynamicForm["Complainant Name"] || "";
+            mappedPayload.oppositeParty = dynamicForm["Accused"] || "";
+            mappedPayload.sinceWhen = dynamicForm["Incident Date"] || "";
+            mappedPayload.amountInvolved = "";
+            mappedPayload.additionalNotes = `Location: ${dynamicForm["Location"] || ""}`;
+            mappedPayload.issueSummary = dynamicForm["Full Incident Description"] || "";
+        } else if (activeTab === "RTI Application") {
+            mappedPayload.yourName = dynamicForm["Applicant Name"] || "";
+            mappedPayload.oppositeParty = dynamicForm["Department"] || "";
+            mappedPayload.sinceWhen = dynamicForm["Address"] || "";
+            mappedPayload.amountInvolved = "";
+            mappedPayload.additionalNotes = "";
+            mappedPayload.issueSummary = dynamicForm["Information Required"] || "";
+        }
+
         try {
-            const res = await fetch("https://verdexai.onrender.com/api/v1/draft", {
+            const res = await fetch("http://localhost:8081/api/v1/draft", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    noticeType: activeTab, yourName: form.yourName,
-                    oppositeParty: form.oppositeParty, issueSummary: form.issueSummary,
-                    sinceWhen: form.sinceWhen, amountInvolved: form.amountInvolved,
-                    additionalNotes: form.additionalNotes, language: "EN",
-                }),
+                body: JSON.stringify(mappedPayload),
             });
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
@@ -149,42 +238,19 @@ export default function DraftPage() {
 
     const paperHeading = "font-bold uppercase tracking-[0.18em] text-[10px] text-[#C9A45C] mb-1";
 
-    const placeholderContent = (
-        <div className="font-serif leading-relaxed text-[15px] flex-1 relative z-10 text-black">
-            <div className="flex justify-between items-end mb-10 border-b border-black/10 pb-7">
-                <div className="space-y-0.5">
-                    <p className={paperHeading}>REGISTERED POST WITH A/D</p>
-                    <p className="text-sm text-black/60 font-sans font-light">Date: {todayDate}</p>
-                </div>
+    const emptyStateContent = (
+        <div className="flex-1 flex flex-col items-center justify-center text-center opacity-60 pointer-events-none select-none h-full min-h-[400px]">
+            <div className="w-20 h-20 mb-6 rounded-full bg-[#C9A45C]/10 border border-[#C9A45C]/20 flex items-center justify-center">
+                <FileText className="w-8 h-8 text-[#C9A45C]" />
             </div>
-            <p className="mb-5 font-bold leading-7 text-sm">
-                To,<br />The HR Manager,<br />ABC Pvt. Ltd.<br />[Company Address]
+            <h3 className="text-xl font-serif font-bold text-black/80 mb-2">
+                {lang === "HI" ? "तैयार दस्तावेज़ यहाँ दिखेगा" : "Your Draft Will Appear Here"}
+            </h3>
+            <p className="text-sm text-black/50 max-w-xs leading-relaxed font-sans">
+                {lang === "HI" 
+                    ? "बाईं ओर दिए गए फ़ॉर्म को भरें और कानूनी दस्तावेज़ बनाने के लिए नीचे दिए गए बटन पर क्लिक करें।" 
+                    : "Fill out the required details on the left to instantly generate a professionally formatted legal document."}
             </p>
-            <p className="mb-8 font-bold text-sm underline underline-offset-4 decoration-[#C9A45C] decoration-2">
-                Subject: Legal Notice for Non-Payment of Salary
-            </p>
-            <p className="mb-6 text-sm">Dear Sir/Madam,</p>
-            <p className="mb-5 indent-8 text-justify text-sm leading-7">
-                Under instructions from and on behalf of my client{" "}
-                <strong className="text-black">Rahul Sharma</strong>, I serve you with the following legal notice:
-            </p>
-            <div className="mb-5 border-l-4 border-[#C9A45C]/60 bg-[#C9A45C]/8 px-5 py-3 rounded-r-sm">
-                <p className="text-sm text-justify leading-7 text-black/80">
-                    That this is to formally notify you that my client's salary for the months of January and February has not been paid despite repeated requests.
-                </p>
-            </div>
-            <p className="mb-5 indent-8 text-justify text-sm leading-7">
-                That your actions amount to a clear violation of the statutory obligations under the{" "}
-                <strong>Payment of Wages Act, 1936</strong>.
-            </p>
-            <p className="mb-14 indent-8 text-justify text-sm leading-7">
-                You are hereby called upon to clear the outstanding amount of{" "}
-                <strong className="text-red-800 bg-red-100/80 px-1.5 py-0.5 rounded-sm">₹40,000</strong>{" "}
-                within <strong>7 days</strong> from the receipt of this notice.
-            </p>
-            <div className="w-24 mb-4 border-b border-black/30" />
-            <p className="font-bold text-sm">Rahul Sharma</p>
-            <p className="text-xs font-sans text-black/50 italic mt-0.5">Complainant / Employee</p>
         </div>
     );
 
@@ -227,6 +293,8 @@ export default function DraftPage() {
         </div>
     );
 
+    const currentSchema = SCHEMAS[activeTab] || SCHEMAS["Salary Notice"];
+
     return (
         <main className="pt-[80px] md:pt-[100px] h-screen bg-[#050505] text-[#F5F1EC] font-sans flex flex-col lg:flex-row relative overflow-hidden">
 
@@ -257,19 +325,13 @@ export default function DraftPage() {
                                 {t("draft.badge")}
                             </span>
                         </div>
-                        <h1 className="text-3xl lg:text-[2.1rem] font-black mb-2.5 font-serif leading-tight tracking-tight">
-                            {t("draft.title")}
-                        </h1>
-                        <p className="text-[#F5F1EC]/50 font-light text-xs mb-8 leading-relaxed">
-                            {t("draft.desc")}
-                        </p>
 
                         {/* Tabs */}
-                        <div className="flex overflow-x-auto no-scrollbar gap-2 mb-8 pb-1">
+                        <div className="flex overflow-x-auto no-scrollbar gap-2 mb-8 mt-2 pb-1">
                             {tabKeys.map((tab) => (
                                 <button
                                     key={tab.en}
-                                    onClick={() => { setActiveTab(tab.en); setDraft(null); setError(null); setIsEditing(false); }}
+                                    onClick={() => handleTabSwitch(tab.en)}
                                     className={`whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold tracking-[0.14em] uppercase transition-all duration-200 border ${
                                         activeTab === tab.en
                                             ? "bg-[#C9A45C] text-[#050505] border-[#C9A45C] shadow-[0_0_14px_rgba(201,164,92,0.25)]"
@@ -284,69 +346,35 @@ export default function DraftPage() {
                         {/* Form */}
                         <div className="bg-gradient-to-br from-[#161314] to-[#3B2B28]/35 border border-[#C9A45C]/15 rounded-2xl p-7 relative overflow-hidden shadow-2xl">
                             <div className="absolute top-0 right-0 w-28 h-28 bg-[#C9A45C]/4 rounded-full blur-[35px] -translate-y-1/2 translate-x-1/3" />
-                            <form onSubmit={generateNotice} className="space-y-4 relative z-10">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {[
-                                        { label: t("draft.field.name"),  key: "yourName",      placeholder: "Rahul Sharma"  },
-                                        { label: t("draft.field.party"), key: "oppositeParty", placeholder: "ABC Pvt. Ltd." },
-                                    ].map(({ label, key, placeholder }) => (
-                                        <div key={key} className="space-y-1.5">
-                                            <label className="text-[9px] text-[#C9A45C] uppercase tracking-[0.18em] font-bold block">{label}</label>
+                            <form onSubmit={generateNotice} className="space-y-4 relative z-10 grid grid-cols-2 gap-x-4 gap-y-4">
+                                {currentSchema.map((field, idx) => (
+                                    <div key={idx} className={`space-y-1.5 ${field.span === 2 ? 'col-span-2' : 'col-span-1'}`}>
+                                        <label className="text-[9px] text-[#C9A45C] uppercase tracking-[0.18em] font-bold block">
+                                            {field.label}
+                                        </label>
+                                        {field.type === "textarea" ? (
+                                            <textarea
+                                                value={dynamicForm[field.label] || ""}
+                                                onChange={(e) => setDynamicForm({ ...dynamicForm, [field.label]: e.target.value })}
+                                                required rows={3}
+                                                placeholder={field.placeholder}
+                                                className="w-full resize-none bg-[#050505]/60 border border-[#C9A45C]/15 focus:border-[#C9A45C]/60 rounded-xl px-4 py-3 text-[#F5F1EC] text-sm outline-none transition-all placeholder:text-[#F5F1EC]/20 focus:bg-[#3B2B28]/20"
+                                            />
+                                        ) : (
                                             <input
                                                 type="text"
-                                                value={form[key as keyof typeof form]}
-                                                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                                                value={dynamicForm[field.label] || ""}
+                                                onChange={(e) => setDynamicForm({ ...dynamicForm, [field.label]: e.target.value })}
                                                 required
-                                                placeholder={placeholder}
+                                                placeholder={field.placeholder}
                                                 className="w-full bg-[#050505]/60 border border-[#C9A45C]/15 focus:border-[#C9A45C]/60 rounded-xl px-4 py-3 text-[#F5F1EC] text-sm outline-none transition-all placeholder:text-[#F5F1EC]/20 focus:bg-[#3B2B28]/20"
                                             />
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[9px] text-[#C9A45C] uppercase tracking-[0.18em] font-bold block">{t("draft.field.issue")}</label>
-                                    <textarea
-                                        value={form.issueSummary}
-                                        onChange={(e) => setForm({ ...form, issueSummary: e.target.value })}
-                                        required rows={3}
-                                        className="w-full resize-none bg-[#050505]/60 border border-[#C9A45C]/15 focus:border-[#C9A45C]/60 rounded-xl px-4 py-3 text-[#F5F1EC] text-sm outline-none transition-all placeholder:text-[#F5F1EC]/20 focus:bg-[#3B2B28]/20"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {[
-                                        { label: t("draft.field.since"),  key: "sinceWhen",      placeholder: "January 2024" },
-                                        { label: t("draft.field.amount"), key: "amountInvolved", placeholder: "₹40,000"      },
-                                    ].map(({ label, key, placeholder }) => (
-                                        <div key={key} className="space-y-1.5">
-                                            <label className="text-[9px] text-[#C9A45C] uppercase tracking-[0.18em] font-bold block">{label}</label>
-                                            <input
-                                                type="text"
-                                                value={form[key as keyof typeof form]}
-                                                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                                                placeholder={placeholder}
-                                                className="w-full bg-[#050505]/60 border border-[#C9A45C]/15 focus:border-[#C9A45C]/60 rounded-xl px-4 py-3 text-[#F5F1EC] text-sm outline-none transition-all placeholder:text-[#F5F1EC]/20 focus:bg-[#3B2B28]/20"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[9px] text-[#C9A45C] uppercase tracking-[0.18em] font-bold block">
-                                        {lang === "HI" ? "अतिरिक्त टिप्पणियां" : "Additional Notes"}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={form.additionalNotes}
-                                        onChange={(e) => setForm({ ...form, additionalNotes: e.target.value })}
-                                        placeholder={lang === "HI" ? "वैकल्पिक विवरण..." : "Optional details..."}
-                                        className="w-full bg-[#050505]/60 border border-[#C9A45C]/15 focus:border-[#C9A45C]/60 rounded-xl px-4 py-3 text-[#F5F1EC] text-sm outline-none transition-all placeholder:text-[#F5F1EC]/20 focus:bg-[#3B2B28]/20"
-                                    />
-                                </div>
+                                        )}
+                                    </div>
+                                ))}
 
                                 {error && (
-                                    <div className="flex items-center gap-2 text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-xl px-4 py-3">
+                                    <div className="col-span-2 flex items-center gap-2 text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-xl px-4 py-3 mt-2">
                                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                         <span>{error}</span>
                                     </div>
@@ -416,7 +444,7 @@ export default function DraftPage() {
                                 ? (lang === "HI" ? "संपादित हो रहा है" : "Editing")
                                 : (lang === "HI" ? "दाखिल करने के लिए तैयार" : "Ready to File")}
                         </div>
-                        {draft ? generatedContent : placeholderContent}
+                        {draft ? generatedContent : emptyStateContent}
                     </div>
 
                     {/* Floating Toolbar */}
@@ -457,3 +485,4 @@ export default function DraftPage() {
         </main>
     );
 }
+
