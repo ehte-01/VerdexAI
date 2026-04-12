@@ -54,7 +54,7 @@ export default function WhistleblowerPage() {
         formData.append("description", description);
         uploadedFiles.forEach(file => formData.append("files", file));
         try {
-            const response = await fetch("http://localhost:8081/api/whistleblower/report", {
+            const response = await fetch("https://verdexai.onrender.com/api/whistleblower/report", {
                 method: "POST", body: formData
             });
             if (!response.ok) {
