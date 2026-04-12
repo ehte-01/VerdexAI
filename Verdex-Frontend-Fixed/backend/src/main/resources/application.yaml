@@ -1,0 +1,44 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/verdex_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  security:
+    user:
+      name: ignored
+      password: ignored
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+groq:
+  api:
+    key: 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
+    url: https://api.groq.com/openai/v1/chat/completions
+    model: llama-3.3-70b-versatile
+    max-tokens: 1500
+
+verdex:
+  cors:
+    allowed-origins: http://localhost:3000
+
+encryption:
+  key: VerdexSecretKey2024ChangeThisNow!
+
+file:
+  upload-dir: uploads
+
+application:
+  base-url: http://localhost:8081
