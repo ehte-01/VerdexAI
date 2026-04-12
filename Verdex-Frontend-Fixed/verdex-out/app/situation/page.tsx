@@ -372,9 +372,7 @@ export default function SituationPage() {
                                         </button>
                                     </div>
 
-                                    <p className="mt-4 text-center text-[#C9A45C]/40 text-xs tracking-widest">
-                                        {result.poweredBy || "Powered by Groq LLaMA 3.3 70B"}
-                                    </p>
+
                                 </div>
 
                                 {result.successRate > 0 && (
