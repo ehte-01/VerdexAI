@@ -42,6 +42,9 @@ public class DraftController {
     @Value("${groq.api.model}")
     private String model;
 
+    @Value("${groq.api.max-tokens}")
+    private int maxTokens;
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -235,8 +238,12 @@ public class DraftController {
 
         ObjectNode body = objectMapper.createObjectNode();
         body.put("model", model);
-        body.put("max_tokens", 2500);
+        body.put("max_tokens", maxTokens);
         body.put("temperature", 0.15);
+
+        ObjectNode responseFormat = objectMapper.createObjectNode();
+        responseFormat.put("type", "json_object");
+        body.set("response_format", responseFormat);
 
         ArrayNode messages = objectMapper.createArrayNode();
 
@@ -349,9 +356,4 @@ public class DraftController {
                 req.additionalNotes != null ? req.additionalNotes : "None"
         );
     }
-
-    // -----------------------------------------------------------------------
-    // Strip markdown fences
-    // -----------------------------------------------------------------------
-
 }

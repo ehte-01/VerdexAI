@@ -40,6 +40,9 @@ public class DocumentService {
     @Value("${groq.api.model}")
     private String model;
 
+    @Value("${groq.api.max-tokens}")
+    private int maxTokens;
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -137,8 +140,15 @@ public class DocumentService {
 
             ObjectNode requestBody = objectMapper.createObjectNode();
             requestBody.put("model", model);
-            requestBody.put("max_tokens", 1500);
+            requestBody.put("max_tokens", maxTokens);
             requestBody.put("temperature", 0.2);
+
+            // Force strict JSON output — without this, newer models (e.g. gpt-oss)
+            // can interleave reasoning/thinking text with the JSON answer, which
+            // breaks parsing or gets truncated before the JSON closes.
+            ObjectNode responseFormat = objectMapper.createObjectNode();
+            responseFormat.put("type", "json_object");
+            requestBody.set("response_format", responseFormat);
 
             ArrayNode messages = objectMapper.createArrayNode();
 

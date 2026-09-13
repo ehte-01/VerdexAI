@@ -1,13 +1,19 @@
 package com.verdex.verdex_backend.service;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,6 +86,10 @@ public class GroqService {
             requestBody.put("model", model);
             requestBody.put("max_tokens", maxTokens);
             requestBody.put("temperature", 0.3);
+
+            ObjectNode responseFormat = objectMapper.createObjectNode();
+            responseFormat.put("type", "json_object");
+            requestBody.set("response_format", responseFormat);
 
             ArrayNode messages = objectMapper.createArrayNode();
 
