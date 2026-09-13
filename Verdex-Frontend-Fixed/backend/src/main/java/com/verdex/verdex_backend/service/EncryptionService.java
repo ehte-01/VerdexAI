@@ -1,15 +1,17 @@
 package com.verdex.verdex_backend.service;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class EncryptionService {
@@ -21,9 +23,13 @@ public class EncryptionService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     public EncryptionService(@Value("${encryption.key}") String encryptionKey) {
-        byte[] keyBytes = encryptionKey.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) keyBytes = Arrays.copyOf(keyBytes, 32);
-        else if (keyBytes.length > 32) keyBytes = Arrays.copyOf(keyBytes, 32);
+        // NOTE: this truncates/zero-pads the raw key to 32 bytes rather than
+        // deriving it via a proper KDF (PBKDF2/HKDF). Fine for now since the
+        // key itself is a freshly rotated random value, but worth upgrading
+        // if this key is ever generated from a human-typed passphrase.
+        byte[] keyBytes = Arrays.copyOf(
+                encryptionKey.getBytes(StandardCharsets.UTF_8), 32
+        );
         this.secretKey = new SecretKeySpec(keyBytes, "AES");
     }
 

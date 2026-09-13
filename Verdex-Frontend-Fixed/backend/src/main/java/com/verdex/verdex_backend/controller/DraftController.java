@@ -1,20 +1,31 @@
 package com.verdex.verdex_backend.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.verdex.verdex_backend.util.JsonCleaner;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -182,7 +193,7 @@ public class DraftController {
 
         try {
             String groqRaw   = callGroq(req);
-            String cleanJson = cleanJson(groqRaw);
+            String cleanJson = JsonCleaner.clean(groqRaw);
 
             JsonNode parsed = objectMapper.readTree(cleanJson);
 
@@ -343,12 +354,4 @@ public class DraftController {
     // Strip markdown fences
     // -----------------------------------------------------------------------
 
-    private String cleanJson(String raw) {
-        if (raw == null) return "{}";
-        raw = raw.trim();
-        if (raw.startsWith("```json")) raw = raw.substring(7);
-        else if (raw.startsWith("```"))  raw = raw.substring(3);
-        if (raw.endsWith("```")) raw = raw.substring(0, raw.length() - 3);
-        return raw.trim();
-    }
 }

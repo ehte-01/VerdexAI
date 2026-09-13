@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   datasource:
-    url: jdbc:postgresql://ep-damp-wildflower-a1p5bcsx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-    username: neondb_owner
-    password: npg_sby5oYMcw3OV
+    url: ${DB_URL:jdbc:postgresql://ep-damp-wildflower-a1p5bcsx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   security:
@@ -25,7 +25,7 @@ spring:
 
 groq:
   api:
-    key: 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
+    key: ${GROQ_API_KEY}
     url: https://api.groq.com/openai/v1/chat/completions
     model: llama-3.3-70b-versatile
     max-tokens: 1500
@@ -35,11 +35,10 @@ verdex:
     allowed-origins: "https://verdexai.pages.dev,http://localhost:3000"
 
 encryption:
-  key: VerdexSecretKey2024ChangeThisNow!
+  key: ${ENCRYPTION_KEY}
 
 file:
-  upload-dir: uploads
+  upload-dir: ${UPLOAD_DIR:uploads}
 
 application:
-  base-url: https://verdexai.onrender.com
-
+  base-url: ${BASE_URL:https://verdexai.onrender.com}

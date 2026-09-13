@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/justice-map")
-@CrossOrigin(origins = "http://localhost:3000")
 public class JusticeMapController {
 
     private final JusticeLocationRepository repository;
@@ -66,10 +65,35 @@ public class JusticeMapController {
                     .collect(Collectors.toList());
         }
 
-        // Sort by distance field (numeric parse)
-        results.sort(Comparator.comparingInt(loc -> parseDistance(loc.getQueueTime())));
+        // Sort by real distance when coordinates are available; otherwise
+        // fall back to the seeded queue-time estimate.
+        if (lat != null && lng != null) {
+            for (JusticeLocation loc : results) {
+                if (loc.getLatitude() != null && loc.getLongitude() != null) {
+                    double dist = calculateDistanceKm(lat, lng, loc.getLatitude(), loc.getLongitude());
+                    loc.setDistance(Math.round(dist * 10.0) / 10.0);
+                }
+            }
+            results.sort(Comparator.comparing(
+                    JusticeLocation::getDistance,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            ));
+        } else {
+            results.sort(Comparator.comparingInt(loc -> parseDistance(loc.getQueueTime())));
+        }
 
         return results;
+    }
+
+    // ── Haversine distance in km between two lat/lng points ──────────
+    private double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     // ── Reverse geocode lat/lng → city name via Nominatim ────────────

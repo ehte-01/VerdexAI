@@ -1,13 +1,16 @@
 package com.verdex.verdex_backend.service;
 
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verdex.verdex_backend.entity.QueryHistory;
 import com.verdex.verdex_backend.model.dto.LegalAnalysisResponse;
 import com.verdex.verdex_backend.model.dto.SituationRequest;
 import com.verdex.verdex_backend.repository.QueryHistoryRepository;
+import com.verdex.verdex_backend.util.JsonCleaner;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -34,7 +37,7 @@ public class SituationService {
             log.info("Groq response received");
 
             // Step 3: Clean and parse response
-            String cleanJson = cleanJson(groqResponse);
+            String cleanJson = JsonCleaner.clean(groqResponse);
             LegalAnalysisResponse response = objectMapper.readValue(
                     cleanJson, LegalAnalysisResponse.class
             );
@@ -51,21 +54,6 @@ public class SituationService {
             log.error("Analysis failed: {}", e.getMessage());
             throw new RuntimeException("Legal analysis failed. Please try again.");
         }
-    }
-
-    private String cleanJson(String raw) {
-        if (raw == null) return "{}";
-        raw = raw.trim();
-        // Remove markdown code blocks if present
-        if (raw.startsWith("```json")) {
-            raw = raw.substring(7);
-        } else if (raw.startsWith("```")) {
-            raw = raw.substring(3);
-        }
-        if (raw.endsWith("```")) {
-            raw = raw.substring(0, raw.length() - 3);
-        }
-        return raw.trim();
     }
 
     private void saveToHistory(SituationRequest request, String category, String analysisJson) {

@@ -1,23 +1,30 @@
 package com.verdex.verdex_backend.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.io.RandomAccessReadBuffer;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.verdex.verdex_backend.util.JsonCleaner;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -163,12 +170,9 @@ public class DocumentService {
                     .path("message").path("content")
                     .asText();
 
-            content = content.trim();
-            if (content.startsWith("```json")) content = content.substring(7);
-            else if (content.startsWith("```")) content = content.substring(3);
-            if (content.endsWith("```")) content = content.substring(0, content.length() - 3);
+            content = JsonCleaner.clean(content);
 
-            return objectMapper.readTree(content.trim());
+            return objectMapper.readTree(content);
 
         } catch (IOException e) {
             // File reading / unsupported format — return user-friendly error
