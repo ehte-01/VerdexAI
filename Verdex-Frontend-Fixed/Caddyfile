@@ -1,0 +1,18 @@
+{$SITE_ADDRESS::80} {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy backend:8081
+	}
+	handle /uploads/* {
+		reverse_proxy backend:8081
+	}
+	handle /actuator/health {
+		reverse_proxy backend:8081
+	}
+	handle {
+		root * /srv
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+}

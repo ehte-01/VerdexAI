@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "../../lib/api";
 import { motion } from "framer-motion";
 import { Download, Copy, Edit3, Share2, TrendingUp, CheckCircle, Scale, Lock, AlertCircle, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -174,7 +175,7 @@ export default function DraftPage() {
         }
 
         try {
-            const res = await fetch("https://verdexai.onrender.com/api/v1/draft", {
+            const res = await fetch(`${API_BASE}/api/v1/draft`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(mappedPayload),
@@ -485,4 +486,5 @@ export default function DraftPage() {
         </main>
     );
 }
+
 

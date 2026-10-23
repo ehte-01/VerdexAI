@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "../../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Mic, AlertCircle, TrendingUp, Scale, Clock,
@@ -51,7 +52,7 @@ export default function SituationPage() {
         setResult(null);
         setError("");
         try {
-            const res = await fetch("https://verdexai.onrender.com/api/v1/analyse", {
+            const res = await fetch(`${API_BASE}/api/v1/analyse`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -427,3 +428,4 @@ export default function SituationPage() {
         </main>
     );
 }
+

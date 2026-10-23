@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "../../lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Navigation, ArrowRight, TrendingUp, Building2, FileText, Scale } from "lucide-react";
@@ -44,7 +45,7 @@ export default function JusticeMapPage() {
             setLoading(true);
             setError("");
             
-            let url = "https://verdexai.onrender.com/api/justice-map";
+            let url = `${API_BASE}/api/justice-map`;
             
             if (city || type) {
                 const params = new URLSearchParams();
@@ -301,3 +302,4 @@ export default function JusticeMapPage() {
         </main>
     );
 }
+

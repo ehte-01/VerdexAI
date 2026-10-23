@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "../../lib/api";
 import { motion } from "framer-motion";
 import { Shield, Lock, FileText, UploadCloud, AlertTriangle, Briefcase, EyeOff, ShieldAlert, PhoneCall, Building2, UserX, MapPin, CheckCircle, X } from "lucide-react";
 import Image from "next/image";
@@ -54,7 +55,7 @@ export default function WhistleblowerPage() {
         formData.append("description", description);
         uploadedFiles.forEach(file => formData.append("files", file));
         try {
-            const response = await fetch("https://verdexai.onrender.com/api/whistleblower/report", {
+            const response = await fetch(`${API_BASE}/api/whistleblower/report`, {
                 method: "POST", body: formData
             });
             if (!response.ok) {

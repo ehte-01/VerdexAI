@@ -1,5 +1,6 @@
 "use client";
 
+import { API_BASE } from "../../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     FileText, ShieldAlert, AlertTriangle, ShieldCheck,
@@ -64,7 +65,7 @@ export default function ShieldPage() {
             formData.append("file", file);
             formData.append("language", lang === "HI" ? "HI" : "EN");
 
-            const res = await fetch("https://verdexai.onrender.com/api/v1/analyse-document", {
+            const res = await fetch(`${API_BASE}/api/v1/analyse-document`, {
                 method: "POST",
                 body: formData,
             });
@@ -506,3 +507,4 @@ export default function ShieldPage() {
         </main>
     );
 }
+
