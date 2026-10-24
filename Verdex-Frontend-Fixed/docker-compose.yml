@@ -36,7 +36,7 @@ services:
       REDIS_HOST: redis
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     ports:
-      - "8081:8081"   # local testing only; AWS security group keeps it closed
+      - "127.0.0.1:8081:8081"   # local testing only; AWS security group keeps it closed
     volumes:
       - uploads:/app/uploads
     restart: unless-stopped
